@@ -1,0 +1,269 @@
+﻿
+@{
+    Layout = "~/Views/Shared/Common_Layout.cshtml";
+}
+
+@section head {
+
+}
+
+@section Content {
+    <h2 class="sub-header">使用者管理</h2>
+    <form id="queryForm" name="queryForm" class="form-horizontal" role="form">
+        <div class="qry_body">
+            <div class="form-group">
+                <label class="col-sm-2 control-label" for="QUERY_USER_ID">員工代號</label>
+                <div class="col-sm-4">
+                    <input type='hidden' id="QUERY_SYS_TYPE" name="QUERY_SYS_TYPE" />
+                    <input type='text' id='QUERY_USER_ID' name='QUERY_USER_ID' desc='員工代號' class='form-control' placeholder="請輸入員工代號" value='' />
+                </div>
+                <label class="col-sm-2 control-label" for="QUERY_USER_NAME">姓名</label>
+                <div class="col-sm-4">
+                    <input type='text' id='QUERY_USER_NAME' name='QUERY_USER_NAME' desc='姓名' class='form-control' placeholder="請輸入姓名" value='' />
+                </div>
+            </div>
+        </div>
+        <div class="col-sm-12 qry_command">
+            <a href="javascript:void(0);" class="btn btn-success btn-lg" onclick="query();">查詢</a>
+        </div>
+    </form>
+    <div class="col-sm-12">
+        <a href="javascript:void(0);" class="btn btn-success" onclick="createItem();">新增使用者</a>
+        <a href="javascript:void(0);" class="btn btn-success" onclick="deleteItem();">刪除使用者</a>
+    </div>
+    <div class="col-sm-12">
+        <div class="table-responsive">
+            <table class="table-striped table-hover" style="width:100%; " id="tableView">
+                <thead>
+                    <tr>
+                        <th class="th_g"></th>
+                        <th class="th_g"></th>
+                        <th class="th_g"></th>
+                        <th class="th_g" nowrap='nowrap'>員工代號</th>
+                        <th class="th_g" nowrap="nowrap">姓名</th>
+                        <th class="th_g" nowrap="nowrap">啟用</th>
+                        <th class="th_g" nowrap="nowrap">EMail</th>
+                        <th class="th_g" nowrap="nowrap">註記</th>
+                        <th class="th_g" nowrap="nowrap">更新人員</th>
+                        <th class="th_g" nowrap="nowrap">更新時間</th>
+                    </tr>
+                </thead>
+                <tbody></tbody>
+            </table>
+        </div>
+    </div>
+
+}
+
+@section Modals {
+    <button id="showInputDialog" style="display: none" class="btn btn-primary btn-lg" data-toggle="modal" data-target="#EditDialog"></button>
+    <div class="modal fade" id="EditDialog" tabindex="-1" role="dialog" aria-hidden="true">
+        <form id="editForm" method="post" class="form-horizontal" role="form">
+            <div class="modal-dialog modal-lg">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                        <h4 id="dialogTitle" class="modal-title">使用者資訊</h4>
+                    </div>
+                    <div class="modal-body">
+                        <input id="MODE" name="MODE" type="text" style="display: none" />
+                        <input id="SYS_TYPE" name="SYS_TYPE" type="text" style="display: none" />
+                        <input id="PID" name="PID" type="text" style="display: none" />
+                        <div class="form-group">
+                            <label class="col-sm-2 control-label" for="USER_ID"><span class="required">*</span>員工代號</label>
+                            <div class="col-sm-4">
+                                <input id="USER_ID" name="USER_ID" type="text" class="form-control v_required" desc="員工代號" placeholder="請輸入員工代號" />
+                            </div>
+                            <label class="col-sm-2 control-label" for="USER_NAME"><span class="required">*</span>姓名</label>
+                            <div class="col-sm-4">
+                                <input id="USER_NAME" name="USER_NAME" type="text" class="form-control v_required" desc="姓名" placeholder="請輸入姓名" />
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="col-sm-2 control-label" for="EMAIL"><span class="required">*</span>EMail</label>
+                            <div class="col-sm-4">
+                                <input type="email" id="EMAIL" name="EMAIL" class="form-control v_required v_Email" />
+                            </div>
+                            <label class="col-sm-2 control-label" for="ACTIVE">是否啟用</label>
+                            <div class="col-sm-4">
+                                <label class="checkbox-inline">
+                                    <input type="checkbox" id="ACTIVE" name="ACTIVE" />啟用
+                                </label>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="col-sm-2 control-label" for="UNIT">單位</label>
+                            <div class="col-sm-4">
+                                <input type="email" id="UNIT" name="UNIT" class="form-control" />
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="col-sm-2 control-label" for="ACTIVE">註記</label>
+                            <div class="col-sm-10">
+                                <textarea id="EXTENSION" name="EXTENSION" class="form-control" rows="3"></textarea>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <a href="javascript:void(0);" id="BtnSave" class="btn btn-success btn-lg" onclick="saveData()">儲存</a>
+                        <button type="button" class="btn btn-success btn-lg" data-dismiss="modal">關閉</button>
+                    </div>
+                </div>
+            </div>
+        </form>
+    </div>
+
+}
+
+@section Scripts {
+    <script>
+        var pageTable = null;
+        var sysType = null;
+        $(document).ready(function () {
+            var columns = [{ "data": "USER_PID", "render": function (data, type, row) { return "<input type='checkbox' name='USER_PID' value='" + data + "' />"; } }
+                           , { "data": "USER_PID", "render": function (data, type, row) { return "<a href='javascript:void(0);' class='btn btn-success' onclick='stopBubbleEvent();editItem(this);'>編輯</a>"; } }
+                           , { "data": "USER_PID", "render": function (data, type, row) { return "<a href='javascript:void(0);' class='btn btn-success' onclick='stopBubbleEvent();resetPW(this);'>重置密碼</a>"; } }
+                           , { "data": "USER_ID" }
+                           , { "data": "USER_NAME" }
+                           , { "data": "ACTIVE" }
+                           , { "data": "EMAIL" }
+                           , { "data": "EXTENSION" }
+                           , { "data": "MODIFIED_BY" }
+                           , { "data": "MODIFIED_ON" }
+
+            ];
+            pageTable = regeditTable('tableView', [], columns, { 'dom': 'f<t>', 'searching': true, "scrollY": "450px" });
+            sysType = $.url.param("sysType");
+            $('#QUERY_SYS_TYPE').val(sysType);
+
+
+            var querySysTypeName = ajaxFastQuery("querySysTypeName", {});
+            $('.sub-header').html($('.sub-header').html() + " <h4>(" + querySysTypeName + ")</h4>");
+
+
+        });
+
+        function query() {
+            ajaxSend('QuerySelAjax', $("#queryForm").serialize(), queryAfter);
+        }
+
+        function queryAfter(obj) {
+            if (obj["returnStatus"] == "false") {
+                showMsg(obj["errorMessage"]);
+                return false;
+            } else {
+                reloadData('tableView', $.parseJSON(obj["data"]));
+            }
+        }
+
+        function createItem() {
+            $("#dialogTitle").html("新增使用者");
+            $("#MODE").val("create");
+            $("#PID").val("");
+            $("#USER_ID").prop('readonly', false);
+            $("#USER_ID").val("");
+            $("#USER_NAME").val("");
+            $("#ACTIVE").prop('checked', true);
+            $("#EMAIL").val("");
+            $("#EXTENSION").val("");
+            $('#SYS_TYPE').val(sysType);
+            $("#UNIT").val("");
+            $("#showInputDialog").click();
+        }
+
+        function editItem(obj) {
+            var rowTr = $(obj).parents('tr');
+            var rowData = pageTable.row(rowTr).data();
+            $("#dialogTitle").html("修改使用者");
+            $("#MODE").val("update");
+            $("#PID").val(rowData['USER_PID']);
+            $("#USER_ID").val(rowData['USER_ID']);
+            $("#USER_ID").prop('readonly', true);
+            $("#USER_NAME").val(rowData['USER_NAME']);
+            $("#ACTIVE").prop('checked', rowData['ACTIVE'] == 'v' ? true : false);
+            $("#EMAIL").val(rowData['EMAIL']);
+            $("#EXTENSION").val(rowData['EXTENSION']);
+            $('#SYS_TYPE').val(sysType);
+            $('#UNIT').val(rowData['UNIT']);
+            $("#showInputDialog").click();
+        }
+
+        function resetPW(obj) {
+            var rowTr = $(obj).parents('tr');
+            var rowData = pageTable.row(rowTr).data();
+            var PID = rowData['USER_PID'];
+            var res = ajaxFastQuery("resetPW", { 'PID': PID });
+            if (res == "") {
+                alert("密碼重置成功~~");
+            } else {
+                alert("密碼重置失敗~~原因:" + res);
+            }
+        }
+
+        function deleteItem() {
+            var selList = getTableSelectCheckBoxValue('tableView');
+            if (selList.length > 0) {
+                if (confirm('總共刪除' + selList.length + '筆資料，是否繼續')) {
+                    var data = $("#queryForm").serialize() + '&PID=' + selList.toString() + "&CODE_TYPE=" + $('#CODE_TYPE').val() + "&SYS_TYPE=" + sysType;
+                    ajaxSend('DeleteItem', data, deleteAfter);
+                }
+            } else {
+                alert('未選擇刪除的資料');
+            }
+        }
+
+        function saveData() {
+            var checkRes = $('#editForm').checkFormDataStr();
+            if (checkRes.length > 0) {
+                showMsg(checkRes);
+                return false;
+            }
+
+            var mode = $("#MODE").val();
+            if (mode == "create") {
+                if (confirm("確認新增?")) {
+                    ajaxSend('CreateItem', $("#editForm, #queryForm").serialize(), createAfter);
+                }
+            }
+            else if (mode == "update") {
+                if (confirm("確認修改?")) {
+                    ajaxSend('UpdateItem', $("#editForm, #queryForm").serialize(), updateAfter);
+                }
+            }
+            $('#EditDialog').modal('hide')
+        }
+
+        function createAfter(obj) {
+            if (obj["returnStatus"] == "false") {
+                showMsg(obj["errorMessage"]);
+                return false;
+            } else {
+                showMsg("新增成功");
+                reloadData('tableView', $.parseJSON(obj["data"]));
+            }
+        }
+
+        function updateAfter(obj) {
+            if (obj["returnStatus"] == "false") {
+                changeTableBodyDataByDom('tableView', "")
+                showMsg(obj["errorMessage"]);
+                return false;
+            } else {
+                showMsg("修改成功");
+                reloadData('tableView', $.parseJSON(obj["data"]));
+            }
+        }
+
+        function deleteAfter(obj) {
+            if (obj["returnStatus"] == "false") {
+                showMsg(obj["errorMessage"]);
+                return false;
+            } else {
+                showMsg("刪除成功");
+                reloadData('tableView', $.parseJSON(obj["data"]));
+            }
+        }
+
+    </script>
+
+}
